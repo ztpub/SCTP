@@ -1,0 +1,34 @@
+Package: SCTP
+Type: Package
+Title: Single-Cell and Tissue Phenotype prediction
+Version: 0.1.0
+Author: Who wrote it
+Maintainer: Wencan <wencan.zhu@yahoo.com>
+Description: Detecting phenotype-specific tumor microenvironment by merging bulk and single cell expression data to spatial transcriptomics.
+Imports:
+    dplyr,
+    Seurat,
+    sigmoid,
+    RColorBrewer,
+    ggplot2,
+    reticulate,
+    basilisk,
+    preprocessCore
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
+StagedInstall: no
+Depends: 
+    dplyr,
+    Seurat,
+    sigmoid,
+    RColorBrewer,
+    ggplot2,
+    reticulate,
+    basilisk,
+    preprocessCore,
+    SeuratWrappers,
+    monocle3,
+    CellChat,
+    R (>= 2.10)
