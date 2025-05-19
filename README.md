@@ -14,6 +14,8 @@ In this tutorial, we provide multiple examples to assist you in applying SCTP to
 
 This package has long term maintenance from Dr. Tao Zeng (zt_2003@163.com), Dr. Wencan Zhu (wencan.zhu@kitz-heidelberg.de), and Dr. Hui Tang (tanghui@fosu.edu.cn).
 
+An alternative webpage for this package can be accessed at https://github.com/valerychu/SCTP.
+
 ## Installation
 
 ### Prerequisites
