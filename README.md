@@ -145,6 +145,6 @@ SpatialFeaturePlot(st_dataset, features = "malignancy")+
 
 ## Class tutorial of SCTP usage
 
-Class 1: Start for new user
+### Class 1: Start for new user
 
 ![image](https://github.com/ztpub/SCTP/blob/main/classVedio/SCTP-class-1-TH-rar.gif)
