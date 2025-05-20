@@ -143,3 +143,5 @@ SpatialFeaturePlot(st_dataset, features = "malignancy")+
   scale_fill_gradientn(colours = col_mal)
 ```
 
+### Class tutorial of SCTP usage
+![image](https://github.com/ztpub/SCTP/blob/main/classVedio/SCTP-class-1-TH-rar.gif)
