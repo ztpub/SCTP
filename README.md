@@ -142,6 +142,11 @@ You can then visualize by SpatialFeaturePlot for spatial transcriptomic data. Va
 SpatialFeaturePlot(st_dataset, features = "malignancy")+
   scale_fill_gradientn(colours = col_mal)
 ```
+SCTP model for another disease,  hepatocellular carcinoma (HCC), is also available and follows the same usage protocol as the CRC model.
+
+```{r}
+st_dataset <- SCTP_HCC(my_seurat = st_dataset)
+```
 
 ## Class tutorial of SCTP usage
 
