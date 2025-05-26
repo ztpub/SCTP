@@ -75,6 +75,7 @@ Alternatively, you can also provide a Seurat object using your own pipeline, but
 
 ```{r}
 load("/Users/w435u/Documents/ST_SC/DATA_STSC_CAO/Seurat_L1.RData") #st_dataset
+# This data is big and can be downloaded from https://drive.google.com/drive/folders/18Jf56JPhArusPEDMt33vLNWpoQExIvJc
 ```
 
 Check on single cell data for required information.
