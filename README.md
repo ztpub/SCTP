@@ -50,6 +50,7 @@ counts <- read.csv(
   header=TRUE,
   row.names = 1
 )
+# This data is big and can be downloaded from https://drive.google.com/drive/folders/18Jf56JPhArusPEDMt33vLNWpoQExIvJc:
 ```
 In this scRNA-seq dataset, each row represents a gene and each column represents a cell. The dimensions of this single-cell data are:
 
