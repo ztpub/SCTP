@@ -32,6 +32,23 @@ Please set up a virtual environment named with "env_SCTP," ensuring it includes 
 * scikit-learn
 * scipy
 
+### R packages installation
+```{r}
+list.of.packages <- c("ggplot2", "Seurat", "reticulate", "monocle3", "remotes")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+BiocManager::install("preprocessCore")
+remotes::install_github('satijalab/seurat-wrappers')
+devtools::install_github("jinworks/CellChat")
+devtools::install_github('cole-trapnell-lab/monocle3')
+devtools::install("SCTP")
+```
+
+### Testing the installation
+```{r}
+library(SCTP)
+```
+
 ## Spots and cell malignancy prediction using SCTP-CRC model
 
 In this section, we outline the procedure for utilizing the SCTP-CRC pretrained model (function `SCTP_CRC`) to evaluate cell or spot malignancy in your own datasets.
