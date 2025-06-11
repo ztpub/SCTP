@@ -34,7 +34,7 @@ Please set up a virtual environment named with "env_SCTP," ensuring it includes 
 
 ### R packages installation
 ```{r}
-list.of.packages <- c("ggplot2", "Seurat", "reticulate", "monocle3", "remotes")
+list.of.packages <- c("ggplot2", "Seurat", "reticulate", "devtools", "remotes")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 BiocManager::install("preprocessCore")
