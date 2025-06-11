@@ -41,7 +41,7 @@ BiocManager::install("preprocessCore")
 remotes::install_github('satijalab/seurat-wrappers')
 devtools::install_github("jinworks/CellChat")
 devtools::install_github('cole-trapnell-lab/monocle3')
-devtools::install("SCTP")
+devtools::install("ztpub/SCTP")
 ```
 
 ### Testing the installation
