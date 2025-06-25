@@ -1,0 +1,381 @@
+---
+title: "SCTP tutorial"
+date: '`r Sys.Date()`'
+output: 
+  html_document:
+    df_print: paged
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      essage = FALSE,
+  warning = FALSE)
+ #include other files if package unavailable in code ocean
+```
+
+# Introduction
+
+The SCTP R package contains the proposed SCTP (Single Cell Tissue Phenotype prediction) method. SCTP provides a valuable approach for analyzing and understanding the cellular malignancy within the tumor microenvironment from an innovative and integrative perspective by combining the essential information from the bulk sample phenotype, single cell composition and cellular special distribution, which would be overlooked in traditional tissue pathological slice. As an automated tissue phenotype prediction model, SCTP facilitates a more profound understanding of tumor microenvironments, enables quantitative characterization of cancer hallmarks, and elucidates the underlying complex molecular and cellular interplay. 
+
+In this tutorial, we provide multiple examples to assist you in applying SCTP to real-world applications. It encompasses instructions for estimating the likelihood of colorectal cancer using a pre-trained model and guides on constructing a new SCTP model using datasets supplied by yourself.
+
+We first load in the required package:
+
+```{r message=FALSE}
+library(SCTP)
+```
+
+# Installation
+
+## Prerequisites
+
+* python 3.9 and R 4.3.0
+
+## Python environment and packages
+
+Please set up a virtual environment named with "env_SCTP," ensuring it includes the required packages:
+
+* numpy
+* pytorch
+* pytorch_geometric
+* scikit-learn
+* scipy 
+
+
+# Spots and cell malignancy prediction using SCTP-CRC model
+
+In this section, we outline the procedure for utilizing the SCTP-CRC pretrained model (function `SCTP_CRC`) to evaluate cell or spot malignancy in your own datasets.
+
+## Loading your dataset
+
+The input data must be formatted as a Seurat object, particularly for spatial transcriptomics data, where examining the image component is highly recommended for visualization of the output. 
+
+### Input as gene expression matrix
+
+For single cell data, in cases where only the counts matrix is available, you could first use the function `Seurat_preprocess` to converted into a Seurat object. This function provide simplified preprocessing procedures and the output is a Seurat object.  
+
+```{r}
+counts <- read.csv(
+  file="/Users/w435u/Documents/ST_SC/Method_Compare/data/IR/GSE115978_counts.csv",
+  header=TRUE,
+  row.names = 1
+)
+```
+
+In this scRNA-seq dataset, each row represents a gene and each column represents a cell. The dimensions of this single-cell data are:
+
+```{r}
+dim(counts)
+```
+
+which indicates there are 23,686 genes and 7,186 cells in total. We use the functions provided from the Seurat package to preprocess this data. To simplify the process, we wrapped the Seurat analysis pipeline into the following function:
+
+```{r warning=FALSE}
+sc_dataset <- Seurat_preprocess(counts, verbose = F, type="SC")
+```
+The output is a Seurat object that contains the required preprocessed counts matrix, as well as other helpful dimensionality reduction results, such as the PCA, t-SNE, and UMAP. 
+
+```{r}
+names(sc_dataset)
+```
+
+For the diversity of spatial transcriptomic formats, automatic preprocessing is unavailable from this package. You must initially process your data to create a Seurat object, which should include the SCT-normalized counts matrix and the image data.
+
+### Input as a seurat object
+
+Alternatively, you can also provide a Seurat object using your own pipeline, but at least a normalized data (assays$RNA@data) is required. Below we show examples with single-cell RNA-seq data (sc_dataset) and spatial transcriptomic data (st_dataset) respectively.
+
+```{r}
+load("/Users/w435u/Documents/ST_SC/DATA_STSC_CAO/Seurat_L1.RData") #st_dataset
+```
+
+Check on single cell data for required information.
+
+```{r}
+!is.null(sc_dataset@assays$RNA@data)
+```
+
+Check on spatial transcriptomic data for required information.
+
+```{r}
+!is.null(st_dataset@assays$SCT$data)
+```
+
+## Malignancy prediction with SCTP-CRC model
+
+### Prediciton for single-cell RNA-seq data
+
+We begin by visualizing the cells, categorized by types as annotated in the original study, presenting only non-immune cells. These are classified into Endothelial cells (E), Fibroblasts (F), and Tumor cells (Tu), which are further subdivided into subclusters shown below:
+
+```{r}
+DimPlot(sc_dataset, group.by  = "cluster", reduction="tsne")+ggtitle("Cell type")+
+  theme(legend.position = "bottom", legend.key.size = unit(2, 'mm'))
+```
+
+Using the provided input, we employ SCTP-CRC to estimate the likelihood of CRC tumor of each cell.
+
+```{r}
+sc_dataset <- SCTP_CRC(my_seurat = sc_dataset)
+```
+
+The predicted malignancy of each cell is stored as an new annotation "malignancy' in the metadata of the output Seurat object.
+
+```{r}
+names(sc_dataset@meta.data)
+```
+
+The results can subsequently be visualized using TSNE or UMAP plots. A value closer to 1 signifies a higher malignancy level in the corresponding spots, whereas a value close to 0 suggests a normal state.
+
+```{r}
+FeaturePlot(sc_dataset, features = "malignancy", reduction="tsne", )+
+  scale_color_gradientn(colours = col_mal)
+```
+
+When compared to the original cell type annotations, it is evident that a significant number of tumor cells have been assigned high malignancy scores, while non-tumor cells have been allocated low malignancy scores.
+
+
+### Prediciton for spatial transcriptomic data
+
+Next, we present an example using spatial transcriptomic data for prediction. Utilizing a preloaded ST Seurat object, we employ the `SCTP_CRC` function to predict the likelihood of tumor presence in each spot.
+
+
+```{r}
+st_dataset <- SCTP_CRC(my_seurat = st_dataset)
+```
+
+Same as single-cell data input, the predicted malignancy of each spot is stored in the annotation "malignancy' in the output Seurat object.
+
+```{r}
+names(st_dataset@meta.data)
+```
+
+You can then visualize by SpatialFeaturePlot for spatial transcriptomic data. Value closer to 1 indicates higher malignancy of the corresponding spots, while value close to 0 indicates normal state. 
+
+```{r}
+SpatialFeaturePlot(st_dataset, features = "malignancy")+
+  scale_fill_gradientn(colours = col_mal)
+```
+
+## Downstream analysis for spatial transcriptomic input
+
+At the single-cell level, standard downstream analyses typically include differential expression gene (DEG) analysis and pathway analysis, following malignancy predictions. In this tutorial, we focus on the novel downstream analysis performed on spatial spots. Once predictions on the spatial transcriptomic data are acquired, several subsequent analyses were conducted. Following the classification of spatial spots as tumor or normal using SCTP-CRC model, we embarked on a series of downstream analyses tailored to spatial transcriptomics.
+
+### Differential expression gene analysis
+
+The new annotation "condition" describes the tumor state. You can identifiy differentially expressed genes between "Tumor" and "Normal" tisseus by the funtion "FindWarkers" as provided in the package Seurat.
+
+```{r}
+Tumor_enriched <- FindMarkers(st_dataset, ident.1 = "Tumor", group.by = 'condition', verbose = FALSE)
+head(Tumor_enriched)
+```
+
+### Tumor invasion trajectory inference
+
+After estimated the tumor likelihood of each spots, users can chose to perform the trajectory analysis with the function 'SCTP_invasion'.  The function will first check if the 'malignancy' is already available in the my_seurat metadata. If not, users should first estimate with the function 'SCTP_CRC'. 
+
+The purpose of this step is to estimate the tumor invasion route, therefore the trajectory analysis will only be performed on malignant spots (i.e. malignancy >0.5). The pseudotime of non-malignant spots will be assigned as -Inf and out of the scope for interpretation. 
+
+
+```{r}
+st_dataset <- SCTP_invasion(my_seurat = st_dataset)
+```
+
+We can visualize the estimated pseudotime:
+
+```{r}
+SpatialFeaturePlot(st_dataset, features = "pseudotime")+
+  scale_fill_gradientn(colours = col_time)
+```
+
+Light color represents spots with a longer period of existence, which can be interpreted as the Root on the histology image. The invasion of the tumor is represented by gradually darked color. Finally, spots colored with dark red are considered as Front.  
+
+### Cellular communication analysis
+
+The cell-cell communication in the spatial context is interpreted as spot-spot communication. To facilitate the presentation, the areas on the tissue were first divided into different regions 
+
+* Root: This region is defined by spots with an estimated pseudotime exceeding the 75th percentile (third quantile) of all pseudotime values, which represents spots indicative of the occurrence after long time within the tumor development.
+* T2: This region is characterized by spots that fall within the interquantile range of all pseudotime values. These spots are located within the tumor area, specifically between the root and the invading tumor cells.
+* Invasion: Comprising spots with estimated pseudotime below the 75th percentile of all pseudotime values. This area typifies the newly formed tumor at the margin, marked by expansion and invasiveness. It is a critical region in tumor progression, highlighting the initial phases of tumor expansion and spread.
+* Front: This region is identified by a distinct cluster in the time trajectory analysis, typically associated with an infinite pseudotime. This cluster represents the interface between tumor cells and normal cells, delineating a vital boundary in tumor development. 
+* Normal: The region includes spots predicted to be peri-tumoral by SCTP-CRC with predicted tumor likelihood inferior or equal to 0.5. These spots, excluded from the trajectory analysis, represent areas unaffected by the tumor.
+
+Subsequently, the CellChat package was utilized to explore ligand-receptor interactions across spots within these distinct regions. The intensity of these interactions can be depicted via circle plots or heatmaps, with crucial signaling interactions being aggregated and emphasized. The 'SCTP_cellchat' function offers a streamlined approach for conducting these various steps in cell-cell communication analysis, simplifying the process for users. The output is a CellChat object, ready for any further analysis.
+
+
+```{r}
+json_path <- "/Users/w435u/Documents/ST_SC/DATA_STSC_CAO/L1/spatial"
+cellchat <- SCTP_cellchat(my_seurat = st_dataset, json_file = json_path)
+```
+
+The \textit{netVisual\_circle} function was used to generate circle plots, illustrating the strength of ligand-receptor interactions. And, the \textit{netVisual\_heatmap} function was implemented to present the number of interaction pairs as a heatmap, facilitating an intuitive understanding of the interaction frequency and patterns.
+
+
+```{r}
+#par(mfrow = c(1,2), xpd=TRUE)
+netVisual_circle(cellchat@net$count, vertex.weight = rowSums(cellchat@net$count), 
+                 weight.scale = T, label.edge= F, title.name = "Number of interactions")
+
+netVisual_heatmap(cellchat, measure = "count", color.heatmap = "Blues")
+
+```
+
+We can visualize several signaling pathways of interests. More details on the cell-cell communication can be found at the chellchat v2. website (https://github.com/sqjin/CellChat).
+
+```{r}
+cellchat@netP$pathways
+```
+
+From the key signaling pathway listed above, we chose to visualize two well-known pathways, one for tumor invasion (WNT pathway) and one for tumor suppression (IGFBP pathway).
+
+```{r}
+pathways.show <- "WNT" # tumor invasion
+netVisual_aggregate(cellchat, signaling = pathways.show, layout = "spatial", 
+                    edge.width.max = 2, vertex.size.max = 1, 
+                    alpha.image = 0.2, vertex.label.cex = 3.5)
+
+pathways.show <- "IGFBP" # tumor suppression
+netVisual_aggregate(cellchat, signaling = pathways.show, layout = "spatial", 
+                    edge.width.max = 2, vertex.size.max = 1, 
+                    alpha.image = 0.2, vertex.label.cex = 3.5)
+
+
+```
+
+### Signature score for cancer hallmark quantification and visualization
+
+To elucidate the molecular functional diversity (e.g. cancer hallmarks) across various tumor regions, we utilized the \textit{AddModuleScore} function from the Seurat package, which involved a pre-defined list of genes that represents a distinct functional category and cancer signatures. SCTP provide several modules related to the tumor invasion signaling pathway:
+
+* Proliferation
+* pEMT
+* Cell_cycle_S
+* Cell_cycle_M
+* Cell_cycle_G2_G2M
+* EMT_angiogenesis
+* EMT_transfer
+* EMT_hardness
+* EMT_invades
+                     
+```{r}
+module_name <- "pEMT"
+genes_list <- all_genelist[[module_name]]
+st_dataset <- AddModuleScore(st_dataset, features = list(genes_list),
+                             name=module_name)
+SpatialFeaturePlot(st_dataset, features = paste0(module_name, "1"))
+```
+
+# Train a SCTP model
+
+If you are interested in building your own SCTP model (especially for other cancer types), this section provides a demonstration of how to train your own model on your own datasets.
+
+## Prepare input data for the model training
+
+The input materials to train the model are the following
+
+* scRNA-seq matrix 
+* spatial transcriptomic matrix 
+* Bulk RNA-seq matrix
+* histology image map to the spatial transcriptomic data
+
+Or you can  load the Seurat objects for single-cell and spatial transcriptomic as input.
+
+```{r, eval=FALSE}
+load("/Users/w435u/Documents/ST_SC/DATA_STSC_CAO/Seurat_sc100.RData")
+load("/Users/w435u/Documents/ST_SC/DATA_STSC_CAO/Seurat_C1.RData")
+
+```
+
+Next we load the bulk data, the rows and columns are genes and samples, respectively. The dimensions of the bulk dataset are:
+
+```{r}
+load("/Users/w435u/Documents/ST_SC/OUTPUT_gse44067/bulk_gse44076.RData")
+dim(bulk_dataset)
+```
+
+There are 196 bulk samples, providing gene expression profiles of paired normal adjacent mucosa and tumor samples from 98 CRC individuals. The pheno type is provided as `Tumor = 1` and `Normal = 0`.
+
+```{r}
+table(pheno)
+```
+
+## Model training
+
+With all input sources loaded into the environment, we use the function 'SCTP' to train the model. (A dedicated folder is needed to store temporary outputs.)
+
+Tuning parameter is a crucial step and can take some time in order to get a predictive model. Key parameters include:
+
+* number of cells you want to include in the training model
+* alpha: leverage the contribution of sc and st data. Default is the one that minimizes the KL divergence between the distribution of the coefficients.
+* number of epoch for training. Default is 1000.
+* number of hidden layers in the GAT model (sc data and st data respectively). Default is 48.
+* number of heads for GAT model. Default is 3.
+* number of hidden layers in the MLP model (st data and st data respectively). Default is 48.
+
+Below is an example with default parameters
+
+```{r, eval=FALSE}
+mod <- SCTP(sc_expr=sc_dataset_new, cell_types=filtered_annot$Cell_subtype, st_dataset = st_dataset, bulk_dataset = bulk_dataset, pheno=pheno, out_dir="/Users/w435u/Documents/OUTPUT", my_seed=12345, n.epoch = 500)
+```
+
+The output of the function is a list with the following elements:
+
+* para: optimization of beta_sc, beta_st and alpha
+* para_all: all estimated coefficients with different parameter alpha
+* sc_expr: matrix
+* st_expr: matrix
+
+They are essential for prediction.
+
+```{r, eval=FALSE}
+str(mod)
+```
+
+With the trained model, we predict on the new ST dataset:
+```{r, eval=FALSE}
+load("/Users/w435u/Documents/ST_SC/DATA_STSC_CAO/Seurat_L1.RData")
+dim(st_dataset)
+```
+
+```{r, eval=FALSE}
+st_dataset <- SCTP_pred(SCTP_model = mod, my_seurat=st_dataset)
+```
+
+# Single-modality implementation of SCTP
+
+Even when only single-cell or spatial transcriptomics (ST) data are available, constructing a SCTP model remains feasible. The following example illustrates the process using solely ST data, though similar steps can be adapted for single-cell data. This model is developed based on the spatial transcriptomics data from a sample with primary colorectal cancer (CRC).
+
+## Prepare input data for model training
+
+First load the ST data and bulk data.  
+```{r }
+load("/Users/w435u/Documents/ST_SC/OUTPUT_gse44067/bulk_gse44076.RData")
+load("/Users/w435u/Documents/ST_SC/DATA_STSC_CAO/Seurat_C1.RData")
+dim(st_dataset)
+```
+
+## Single-modality model training
+
+The function SCTP_mono accepts a Seurat object st_dataset, a bulk_dataset, and the phenotype of bulk samples as input.
+
+```{r }
+mod_mono <- SCTP_mono(my_seed=12345, n.epoch = 500, st_dataset = st_dataset, bulk_dataset = bulk_dataset, pheno=pheno, out_dir="/Users/w435u/Documents/OUTPUT")
+```
+
+The model includes the estimated coefficient beta and its corresponding matrix, both of which are utilized for prediction purposes.
+
+```{r }
+str(mod_mono)
+```
+
+## Make prediction on trained model
+
+To make predictions on another set of spatial data, you should input the pre-trained SCTP single modality model along with your spatial data.
+
+```{r }
+load("/Users/w435u/Documents/ST_SC/DATA_STSC_CAO/Seurat_C3.RData")
+st_dataset <- SCTP_mono_pred(SCTP_model = mod_mono, my_seurat=st_dataset)
+SpatialFeaturePlot(st_dataset, features = "malignancy")+
+  scale_fill_gradientn(colours = col_mal)
+```
+
+

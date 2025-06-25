@@ -32,23 +32,6 @@ Please set up a virtual environment named with "env_SCTP," ensuring it includes 
 * scikit-learn
 * scipy
 
-### R packages installation
-```{r}
-list.of.packages <- c("ggplot2", "Seurat", "reticulate", "remotes")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-BiocManager::install("preprocessCore")
-remotes::install_github('satijalab/seurat-wrappers')
-devtools::install_github("jinworks/CellChat")
-devtools::install_github('cole-trapnell-lab/monocle3')
-devtools::install("SCTP")
-```
-
-### Testing the installation
-```{r}
-library(SCTP)
-```
-
 ## Spots and cell malignancy prediction using SCTP-CRC model
 
 In this section, we outline the procedure for utilizing the SCTP-CRC pretrained model (function `SCTP_CRC`) to evaluate cell or spot malignancy in your own datasets.
@@ -67,7 +50,6 @@ counts <- read.csv(
   header=TRUE,
   row.names = 1
 )
-# This data is big and can be downloaded from https://drive.google.com/drive/folders/18Jf56JPhArusPEDMt33vLNWpoQExIvJc
 ```
 In this scRNA-seq dataset, each row represents a gene and each column represents a cell. The dimensions of this single-cell data are:
 
@@ -93,7 +75,6 @@ Alternatively, you can also provide a Seurat object using your own pipeline, but
 
 ```{r}
 load("/Users/w435u/Documents/ST_SC/DATA_STSC_CAO/Seurat_L1.RData") #st_dataset
-# This data is big and can be downloaded from https://drive.google.com/drive/folders/18Jf56JPhArusPEDMt33vLNWpoQExIvJc
 ```
 
 Check on single cell data for required information.
