@@ -170,7 +170,8 @@ st_dataset <- SCTP_HCC(my_seurat = st_dataset)
 ## Class tutorial of SCTP usage
 
 ### Class 1: Start for new user
-
-![image](https://github.com/ztpub/SCTP/blob/main/classVedio/SCTP-class-1-TH-rar.gif)
-
+English version:
 ![image](https://github.com/ztpub/SCTP/blob/main/classVedio/SCTP-class-1-TH-rar_EN.gif)
+
+Chinese version:
+![image](https://github.com/ztpub/SCTP/blob/main/classVedio/SCTP-class-1-TH-rar.gif)
