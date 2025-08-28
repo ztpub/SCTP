@@ -47,6 +47,7 @@ devtools::install("SCTP")
 ### Testing the installation
 ```{r}
 library(SCTP)
+* If you encounter difficulties in installing software packages， pls refer our install instruction file "SCTP install R list 20250610.docx"
 ```
 
 ## Spots and cell malignancy prediction using SCTP-CRC model
